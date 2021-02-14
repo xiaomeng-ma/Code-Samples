@@ -2,9 +2,9 @@
 R and Python Code samples
 
 
-## R sample (Fitting Power Law Distribution)
+## R sample (Fitting Distribution)
 
-This is part of a project Tolerance Principle. Is to test word frequency distribution in children's early utterances. The data used in the code sample is the ranked word frequency in the early utterances of one child (Adam). In the code sample, I fitted the word frequency to four distributions: power law, lognormal, exponential and poisson. 
+This is part of a project of testing Tolerance Principle. The purpose of this sample code is to fit the word frequency in children's early utterances to a power law distribution. The data used in the code sample is the ranked word frequency in the early utterances of one child (Adam). In the code sample, I fitted the word frequency to four distributions: power law, lognormal, exponential and poisson. 
 
 Here is the latest draft of the paper: https://xiaomeng-ma.github.io/Tolerance_Principle_March17.pdf
 
