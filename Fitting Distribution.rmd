@@ -1,0 +1,140 @@
+---
+title: "Fitting Power Law Distribution"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+##Import Clean Data
+data_url = "https://raw.githubusercontent.com/xiaomeng-ma/Tolerance-Principle/master/8x4.csv"
+df <- read.csv(data_url, header = TRUE)
+```
+
+```{r}
+#Visualize Data
+hist(df$Adam,xlab='Word',main='Histogram of Word Frequency')
+plot(df$Adam,type='l',ylab='Frequency',main='Plot of Word Frequency')
+```
+
+```{r}
+#x is the frequency of each word
+#y is the rank 
+x<-na.omit(df$Adam)
+y<-seq.int(1:306)
+
+```
+
+```{r}
+library(poweRlaw)
+m_pl <- displ$new(x)
+est_pl <- estimate_xmin(m_pl)
+est_pl$xmin #estimated x_min
+est_pl$pars #estimated alpha
+est_pl$gof #D(x_min), Kolmogorov-Smirnov statistics
+```
+```{r}
+##Scanning the whole range to make sure D is minimum
+data.s <- unique(x)
+
+d_est <- data.frame(x_min=sort(data.s)[1:(length(data.s)-2)], alpha=rep(0,length(data.s)-2), D=rep(0,length(data.s)-2))
+
+for (i in d_est$x_min){
+  d_est[which(d_est$x_min == i),2] <- estimate_xmin(m_pl, xmins = i)$pars
+  d_est[which(d_est$x_min == i),3] <- estimate_xmin(m_pl, xmins = i)$gof
+}
+
+x.min_D.min <- d_est[which.min(d_est$D), 1]
+```
+```{r}
+library(ggplot2)
+ggplot(data=d_est, aes(x=x_min, y=D)) + geom_line() + theme_bw() + 
+  geom_vline(xintercept=x.min_D.min, colour="red") + annotate("text", x=x.min_D.min, y=max(d_est$D)/3*2, label=x.min_D.min)
+```
+```{r}
+ggplot(data=d_est, aes(x=x_min, y=alpha)) + geom_line() + theme_bw() + 
+  geom_vline(xintercept=x.min_D.min, colour="red") + annotate("text", x=x.min_D.min, y=max(d_est$alpha)/3*2, label=x.min_D.min)
+```
+
+```{r}
+##Fitting power-law on CDF curve
+m_pl$setXmin(est_pl)
+plot.data <-plot(m_pl, draw = F)
+fit.data <-lines(m_pl, draw = F)
+ggplot(plot.data) + geom_point(aes(x=log(x), y=log(y))) + labs(x="log(k)", y="log(CDF)") + theme_bw() + 
+  geom_line(data=fit.data, aes(x=log(x), y=log(y)), colour="red") 
+```
+
+```{r}
+## get xmin and xmax pairs
+pairs <- as.data.frame(t(combn(sort(data.s),2)))
+pairs$D <- rep(0, length(pairs$V1))
+pairs$alpha <- rep(0, length(pairs$V1))
+
+## go through D for all xmin and xmax pairs
+for (i in 1:length(pairs$D)){
+  m_pl$setXmin((pairs[i,1]))
+  pairs[i, 3]<-estimate_xmin(m_pl, xmin = pairs[i,1], xmax = pairs[i,2], distance = "ks")$gof
+  pairs[i, 4]<-estimate_xmin(m_pl, xmin = pairs[i,1], xmax = pairs[i,2], distance = "ks")$pars
+}
+
+```
+```{r}
+bs_pl_sat_cut <- bootstrap_p(m_pl, xmins = pairs[which.min(pairs$D), 1], xmax = pairs[which.min(pairs$D), 2], no_of_sims = 20, threads = 8)
+##get parameters
+pairs[which.min(pairs$D), 1] #x_min
+pairs[which.min(pairs$D), 2] #x_max
+pairs[which.min(pairs$D), 3] #D
+pairs[which.min(pairs$D), 4] #alpha
+```
+```{r}
+## p-value
+bs_pl_sat_cut$p 
+## since the score is 1, based on the PoweRlaw package document, this means the power law model is a possible fit.
+```
+
+```{r}
+x_min <- 3
+x_max <-196
+alpha <-1.621801
+```
+
+```{r}
+##Compare 4 similar distributions
+
+#powerlaw
+m_pl = displ$new(x)
+est_pl <- estimate_xmin(m_pl, xmins = x_min, xmax = x_max, distance = "ks")
+m_pl$setXmin(est_pl)
+
+#lognormal
+m_ln = dislnorm$new(x)
+est_ln <- estimate_xmin(m_ln)
+m_ln$setXmin(est_ln)
+
+#exponential
+m_exp = disexp$new(x)
+est_exp <- estimate_xmin(m_exp)
+m_exp$setXmin(est_exp)
+
+
+#poisson
+m_poi = dispois$new(x)
+est_poi <-estimate_xmin(m_poi)
+m_poi$setXmin(est_poi)
+
+```
+```{r}
+plot(m_pl)
+lines(m_pl, col="red")
+lines(m_ln, col="green")
+lines(m_poi, col="blue")
+lines(m_exp, col="magenta")
+```
+
+
