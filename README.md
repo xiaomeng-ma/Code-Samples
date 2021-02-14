@@ -14,4 +14,5 @@ This is part o I predicted the case of pronoun X in a flexible trigram frame. Fo
 
 
 
-Here is the paper: https://www.aclweb.org/anthology/2020.cmcl-1.9/  (in the proceedings of the CMCL workshop at EMNLP 2020)
+Here is the paper: https://www.aclweb.org/anthology/2020.cmcl-1.9.pdf  
+(in the proceedings of the CMCL workshop at EMNLP 2020)
